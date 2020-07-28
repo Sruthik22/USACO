@@ -15,90 +15,124 @@ public class cowjump {
         return (int) in.nval;
     }
 
-    static String next() throws IOException {
-        in.nextToken();
-        return in.sval;
-    }
+    static ArrayList<Point> points;
+    static Line[] lines;
 
     public static void main(String[] args) throws Exception {
         in = new StreamTokenizer(new BufferedReader(new FileReader("cowjump.in")));
+
         int n = nextInt();
 
-        line[] lines = new line[n];
-        point[] points = new point[2*n];
+        points = new ArrayList<>();
+        lines = new Line[n];
 
         for (int i = 0; i < n; i++) {
             int x1 = nextInt();
             int y1 = nextInt();
+
+            Point p1 = new Point(x1, y1, i);
+
+            points.add(p1);
+
             int x2 = nextInt();
             int y2 = nextInt();
 
-            points[i*2] = new point(x1, y1, i);
-            points[i*2+1] = new point(x2, y2, i);
+            Point p2 = new Point(x2, y2, i);
 
-            lines[i] = new line(points[i*2], points[i*2+1]);
+            points.add(p2);
+
+            lines[i] = new Line(p1, p2);
         }
 
-        Arrays.sort(points);
+        Collections.sort(points);
 
-        // the index of line, and the number of times it has been intersected
+        ArrayList<Point> activeList = new ArrayList<>();
+        HashSet<Point> activeHash = new HashSet<>();
 
-        int result = -1;
+        int l1Index = 0;
+        int l2Index = 0;
 
-        HashMap<Integer, Integer> cowsIntersections = new HashMap<>();
-        HashSet<Integer> curCows = new HashSet<>();
+        for (int i = 0; i < 2 * n; i++) {
+            // we need to check if the other point in this line is already used
 
-        for (point currentPoint : points) {
-            cowsIntersections.putIfAbsent(currentPoint.indexLine, 0);
+            Point cur = points.get(i);
 
-            // check if it ends a line, then remove
-            // if not
-            // check if the line this point is part of intersects the lines within the map array
-            // add one to each index it intersects in the cowsIntersections map
-            // if any of the intersections is 2 or greater than end program by outputting that index
-            // otherwise continue and if they are all equal, output the first index in the cowsIntersections Map with 1 intersection
+            Point other;
 
-            if (curCows.contains(currentPoint.indexLine)) {
-                curCows.remove(currentPoint.indexLine);
-            } else {
-                for (int j : curCows) {
-                    if (doIntersect(lines[j].a, lines[j].b, lines[currentPoint.indexLine].a, lines[currentPoint.indexLine].b)) {
-                        int jIntersections = cowsIntersections.get(j) + 1;
+            if (lines[cur.id].p1.equals(cur)) other = lines[cur.id].p2;
+            else other = lines[cur.id].p1;
 
-                        if (jIntersections >= 2) {
-                            result = j;
-                            break;
-                        }
+            if (activeHash.contains(other)) {
+                int index = activeList.indexOf(other);
+                // when this is removed, we need to check if the two that surrounded it are intersecting
 
-                        cowsIntersections.put(j, jIntersections);
+                activeList.remove(index);
+                activeHash.remove(other);
 
-                        int curIntersections = cowsIntersections.get(currentPoint.indexLine) + 1;
+                if (index != 0 && index != activeList.size()) {
+                    // then we can check if the surrounding is intersecting
 
-                        if (curIntersections >= 2) {
-                            result = currentPoint.indexLine;
-                            break;
-                        }
+                    int lineID1 = activeList.get(index-1).id;
+                    int lineID2 = activeList.get(index).id;
 
-                        cowsIntersections.put(currentPoint.indexLine, curIntersections);
+                    boolean result = intersection(lineID1, lineID2);
+
+                    if (result) {
+                        l1Index = lineID1;
+                        l2Index = lineID2;
+                        break;
                     }
-
                 }
-                curCows.add(currentPoint.indexLine);
+
+            }
+
+            else {
+                activeList.add(cur);
+                activeHash.add(cur);
+
+                if (activeList.size() != 1) {
+
+                    int lineID1 = cur.id;
+                    int lineID2 = activeList.get(activeList.size() - 2).id;
+
+                    boolean result = intersection(lineID1, lineID2);
+
+                    if (result) {
+                        l1Index = lineID1;
+                        l2Index = lineID2;
+                        break;
+                    }
+                }
             }
         }
 
-        if (result == -1) {
-            // then find the first index in the intersections map with a non zero intersection
-            for (Map.Entry<Integer,Integer> entry : cowsIntersections.entrySet()) {
+        int numIntersections_l1 = 0;
+        int numIntersections_l2 = 0;
 
-                int key = entry.getKey();
-                int value = entry.getValue();
-
-                if (value == 1) {
-                    result = key;
-                    break;
-                }
+        for (int i = 0; i < n; i++) {
+            if (i != l1Index) {
+                if (intersection(l1Index, i)) numIntersections_l1++;
             }
+        }
+
+        for (int i = 0; i < n; i++) {
+            if (i != l2Index) {
+                if (intersection(l2Index, i)) numIntersections_l2++;
+            }
+        }
+
+        int result;
+
+        if (numIntersections_l1 > numIntersections_l2) {
+            result = l1Index;
+        }
+
+        else if (numIntersections_l2 > numIntersections_l1) {
+            result = l2Index;
+        }
+
+        else {
+            result = Math.min(l1Index, l2Index);
         }
 
         result++;
@@ -109,84 +143,57 @@ public class cowjump {
         out.close();
     }
 
-    private static boolean onSegment(point p, point q, point r)
-    {
-        if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
-                q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y))
-            return true;
+    private static boolean intersection(int index1, int index2) {
+        Line l1 = lines[index1];
+        Line l2 = lines[index2];
 
-        return false;
+        return Point.intersectQ(l1.p1, l1.p2, l2.p1, l2.p2);
     }
 
-    private static int orientation(point p, point q, point r)
-    {
-        int val = (q.y - p.y) * (r.x - q.x) -
-                (q.x - p.x) * (r.y - q.y);
+    public static class Line {
+        Point p1, p2;
 
-        if (val == 0) return 0; // colinear
-
-        return (val > 0)? 1: 2; // clock or counterclock wise
+        Line(Point p1, Point p2) {
+            this.p1 = p1;
+            this.p2 = p2;
+        }
     }
 
-    // The main function that returns true if line segment 'p1q1'
-// and 'p2q2' intersect.
-    static boolean doIntersect(point p1, point q1, point p2, point q2)
-    {
-        // Find the four orientations needed for general and
-        // special cases
-        int o1 = orientation(p1, q1, p2);
-        int o2 = orientation(p1, q1, q2);
-        int o3 = orientation(p2, q2, p1);
-        int o4 = orientation(p2, q2, q1);
-
-        // General case
-        if (o1 != o2 && o3 != o4)
-            return true;
-
-        // Special Cases
-        // p1, q1 and p2 are colinear and p2 lies on segment p1q1
-        if (o1 == 0 && onSegment(p1, p2, q1)) return true;
-
-        // p1, q1 and q2 are colinear and q2 lies on segment p1q1
-        if (o2 == 0 && onSegment(p1, q2, q1)) return true;
-
-        // p2, q2 and p1 are colinear and p1 lies on segment p2q2
-        if (o3 == 0 && onSegment(p2, p1, q2)) return true;
-
-        // p2, q2 and q1 are colinear and q1 lies on segment p2q2
-        if (o4 == 0 && onSegment(p2, q1, q2)) return true;
-
-        return false; // Doesn't fall in any of the above cases
-    }
-
-    private static class point implements Comparable<point>{
-        int x, y;
-
-        int indexLine;
-
-        point(int x, int y, int indexLine) {
-            this.x = x;
-            this.y = y;
-            this.indexLine = indexLine;
+    public static class Point implements Comparable<Point>{
+        public int x, y, id;
+        public Point(int x, int y, int id) {
+            this.x = x; this.y = y; this.id = id;
         }
 
+        public static int sign(Point A, Point B, Point C) {
+            int area = (B.x-A.x) * (C.y-A.y) - (C.x-A.x) * (B.y-A.y);
+            return Integer.compare(area, 0);
+        }
+        public static boolean between(Point P, Point X, Point Y) {
+            return ((X.x <= P.x && P.x <= Y.x) || (Y.x <= P.x && P.x <= X.x))
+                    && ((X.y <= P.y && P.y <= Y.y) || (Y.y <= P.y && P.y <= X.y));
+        }
+        public static boolean intersectQ(Point P, Point Q, Point X, Point Y) {
+            int[] signs = {sign(P, X, Y), sign(Q, X, Y), sign(X, P, Q), sign(Y, P, Q)};
+            if (signs[0] == 0 && signs[1] == 0 && signs[2] == 0 && signs[3] == 0)
+                return between(P, X, Y) || between(Q, X, Y) || between(X, P, Q);
+            return signs[0] != signs[1] && signs[2] != signs[3];
+        }
+
+        public boolean equals(Point o) {
+            return this.x == o.x && this.y == o.y;
+        }
 
         @Override
-        public int compareTo(point o) {
-            return this.x - o.x;
+        public int compareTo(Point o) {
+            if (this.x == o.x) {
+                return this.y - o.y;
+            }
+
+            else return this.x - o.x;
         }
     }
 
-    private static class line {
-        point a;
-        point b;
-
-
-        line(point a, point b) {
-            this.a = a;
-            this.b = b;
-        }
-    }
 }
 
 

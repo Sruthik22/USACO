@@ -8,33 +8,31 @@ import java.io.*;
 
 public class loan {
 
-    private static long n;
-    private static long k;
-    private static long m;
+    static StreamTokenizer in;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("loan.in"));
-        n = in.nextLong(); // number of gallons
-        k = in.nextLong(); // number of days
-        m = in.nextLong(); // least gallons per day
+    static long nextLong() throws IOException {
+        in.nextToken();
+        return (long) in.nval;
+    }
 
-        in.close();
+    static long n;
+    static long k;
+    static long m;
 
-        long low = 0;
-        long high = 1000000000000L;
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("loan.in")));
 
-        while (low + 1 < high) {
-            long medium = (high + low) / 2L;
+        n = nextLong();
+        k = nextLong();
+        m = nextLong();
 
-            boolean works = simulate(medium);
+        long low = -1; // nothing is desired this point and lower
+        long high = (long) 1E12; // at this point and higher everything is always true
 
-            if (works) {
-                low = medium;
-            }
-
-            else {
-                high = medium - 1;
-            }
+        while (high - low > 1) {
+            long mid = (low + high)/2;
+            if (check(mid)) low = mid;
+            else high = mid;
         }
 
         long result = low;
@@ -45,34 +43,25 @@ public class loan {
         out.close();
     }
 
-    private static boolean simulate(long x) {
+    static boolean check(long x) {
+        long orig_val = n / x;
+        long days_left = k;
+        long gallons_left = n;
 
-        /* need to skip fractions based on the size of g */
+        for (long i = orig_val; i > m; i--) {
+            long g = gallons_left - x * i;
+            long num_days = (long) Math.ceil((double) g / i);
 
-        long g = 0; // how much given so far
-        long daysLeft = k; // how many days left
+            long days_used = Math.min(num_days, days_left);
 
-        while (daysLeft >= 0 && g < n) {
-
-            long y = (n-g) / x;
-
-            if (y < m) {
-                return m*k + g >= n; // going to decrease no matter what
-            }
-
-            // not the minimum value
-            // how to use the most possible
-
-            long maxmatch = n - y * x; // <-- this is the maximum value possible
-            long numdays = (maxmatch - g) / y + 1; // <--
-
-            if (numdays > k) numdays = k;
-
-            g += y;
-
-            daysLeft--;
+            gallons_left -=  days_used * i;
+            if (gallons_left <= 0) return true;
+            days_left -= days_used;
+            if (days_left <= 0) return false;
         }
 
-        return g >= n;
+        return m * days_left >= gallons_left;
     }
 }
+
+

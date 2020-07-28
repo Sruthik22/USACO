@@ -46,5 +46,3 @@ public class cowcode {
         return code(s, index - length - 1);
     }
 }
-
-

@@ -8,117 +8,71 @@ import java.io.*;
 
 public class convention {
 
-    private static int n;
-    private static int m;
-    private static int c;
-    private static int[] cowsTimes;
+    static StreamTokenizer in;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("convention.in"));
-        n = in.nextInt(); // number of cows
-        m = in.nextInt(); // number of buses
-        c = in.nextInt(); // max number of cows per bus
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
 
-        cowsTimes = new int[n];
+    static int n;
+    static int m;
+    static int c;
+    static int[] cows;
+
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("convention.in")));
+
+        n = nextInt();
+        m = nextInt();
+        c = nextInt();
+
+        cows = new int[n];
+
         for (int i = 0; i < n; i++) {
-            cowsTimes[i] = in.nextInt();
+            cows[i] = nextInt();
         }
 
-        Arrays.sort(cowsTimes);
+        Arrays.sort(cows);
 
-        in.close();
+        int low = -1; // nothing is desired this point and lower
+        int high = 1000000000; // at this point and higher everything is always true
 
-        int low = 0;
-        int high = Integer.MAX_VALUE;
-
-        while (low < high) {
-            int medium = (high + low) / 2;
-
-            boolean works = simulate(medium);
-
-            if (works) {
-                high = medium;
-            }
-
-            else {
-                low = medium + 1;
-            }
+        while (high - low > 1) {
+            int mid = (low + high)/2;
+            if (check(mid)) high = mid;
+            else low = mid;
         }
 
-        int result = low - 1;
-
+        int result = high;
         PrintWriter out = new PrintWriter(new File("convention.out"));
         System.out.println(result);
         out.println(result);
         out.close();
     }
 
-    private static boolean simulate(int maxWeightingTime) {
-        int startTime = 0;
-        int busNumber = 0;
-        int cowNumber = 0;
+    static boolean check(int waiting_time) {
+        int bus_remaining = m;
 
-        for (int i : cowsTimes) {
-            if (busNumber == 0) {
-                busNumber = 1;
-                startTime = i;
-                cowNumber = 1;
+        int last_time = 0;
+        int cows_used = 0;
+
+        for (int i = 0; i < n; i++) {
+            int cowTime = cows[i];
+
+            if (last_time < cowTime || cows_used == c) {
+                bus_remaining--;
+                cows_used = 0;
+                last_time = cowTime + waiting_time;
             }
 
-            else {
-                if (startTime + maxWeightingTime > i) {
-                    // then provided the bus has enough space, we can add the cow
-                    if (cowNumber < c) {
-                        cowNumber++;
-                    }
+            cows_used++;
 
-                    else {
-                        startTime = i;
-                        busNumber++;
-                        cowNumber = 1;
-                    }
-                }
-
-                else {
-                    startTime = i;
-                    busNumber++;
-                    cowNumber = 1;
-                }
-            }
-
-            if (busNumber > m) return false;
+            if (bus_remaining < 0) return false;
         }
 
         return true;
     }
-  
- /*
- ANALYSIS
-    cows in line are the next to be assigned to the bus
-
-    We are trying to minimize the maximum waiting time of the cows
-
-    So therefore we do a binary search of all times to figure out the most efficient
-
-    With the maximum time, we are trying to use all of it:
-
-    therefore bus 1 starts at the first cow
-    and ends only when cow 1 + maximum time ends
-    or when there are too many cows on the bus
-
-    the next bus begins with the same rules
-    fails when all of the cows don't get on the bus
-
-    IF YOU CAN'T FIND EFFICIENTLY IN AN ALGORITHM,
-    THINK ABOUT TRYING UNTIL IT WORKS WITH SIMPLE TRIALS BASED ON ONE VARIABLE
-
-
-    data structures:
-    array for the times
-    sort the array
-    int for start time of current bus
-    int for number of the current bus
- */
 }
 
 

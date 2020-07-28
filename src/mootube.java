@@ -17,60 +17,74 @@ public class mootube {
 
     public static void main(String[] args) throws Exception {
         in = new StreamTokenizer(new BufferedReader(new FileReader("mootube.in")));
-        int n = nextInt();
-        int q = nextInt();
 
-        LinkedList<Edge>[] edges = new LinkedList[n];
-        for(int i = 0; i < n; i++) {
-            edges[i] = new LinkedList<Edge>();
+        int N = nextInt();
+        int Q = nextInt();
+
+        LinkedList<Edge>[] linkedLists = new LinkedList[N];
+
+        for (int i = 0; i < N; i++) {
+            linkedLists[i] = new LinkedList<>();
         }
 
-        for(int i = 0; i < n-1; i++) {
-            int pi = nextInt()-1;
-            int qi = nextInt()-1;
-            int ri = nextInt();
+        for (int i = 0; i < N-1; i++) {
+            int p = nextInt() - 1;
+            int q = nextInt() - 1;
+            int r = nextInt();
 
-            edges[pi].add(new Edge(qi, ri));
-            edges[qi].add(new Edge(pi, ri));
+            linkedLists[p].add(new Edge(q, r));
+            linkedLists[q].add(new Edge(p, r));
         }
 
-        PrintWriter printWriter = new PrintWriter(new File("mootube.out"));
+        PrintWriter out = new PrintWriter(new File("mootube.out"));
 
-        for(int query = 0; query < q; query++) {
-            int threshold = nextInt();
-            int start = nextInt()-1;
-            int ret = 0;
-            LinkedList<Integer> queue = new LinkedList<Integer>();
-            queue.add(start);
-            boolean[] seen = new boolean[n];
-            seen[start] = true;
-            while(!queue.isEmpty()) {
-                int curr = queue.removeFirst();
-                for(Edge out: edges[curr]) {
-                    if (!seen[out.d]) {
-                        seen[out.d] = true;
-                        if (out.w >= threshold) {
-                            queue.add(out.d);
-                            ret++;
-                        }
+        for (int i = 0; i < Q; i++) {
+
+            int k = nextInt();
+            int v = nextInt() - 1;
+
+            boolean[] nodes = new boolean[N];
+
+            Stack<Integer> stack = new Stack<>();
+
+            stack.add(v);
+            nodes[v] = true;
+
+            int result = 0;
+
+            while (!stack.isEmpty()) {
+                // we need to add all of the values this current stack is connected to
+
+                int node = stack.pop();
+
+                for (Edge e: linkedLists[node]) {
+                    if (e.weight >= k && !nodes[e.destination]) {
+                        result++;
+                        nodes[e.destination] = true;
+                        stack.add(e.destination);
                     }
                 }
             }
-            printWriter.println(ret);
-            System.out.println(ret);
 
+            System.out.println(result);
+            out.println(result);
         }
 
-        printWriter.close();
+        out.close();
     }
 
-    static class Edge {
-        public int d, w;
-        public Edge(int a, int b) {
-            d=a;//the node connected
-            w=b;//the weight
+    public static class Edge {
+        int destination;
+        int weight;
+
+        Edge(int destination, int weight) {
+            this.destination = destination;
+            this.weight = weight;
         }
     }
+
+    /*
+    * */
 }
 
 

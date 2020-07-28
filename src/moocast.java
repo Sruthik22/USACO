@@ -8,113 +8,101 @@ import java.io.*;
 
 public class moocast {
 
-    private static int maxBroadcast;
-    private static int curBroadcast;
-    private static Node[] nodes;
-    private static double[][] nodeDist;
+    static StreamTokenizer in;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("moocast.in"));
-        int n = in.nextInt();
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
 
-        nodes = new Node[n];
-        nodeDist = new double[n][n];
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("moocast.in")));
+
+        int n = nextInt();
+
+        LinkedList<Integer>[] linkedLists = new LinkedList[n];
 
         for (int i = 0; i < n; i++) {
-            int x = in.nextInt();
-            int y = in.nextInt();
-            int p = in.nextInt();
-
-            nodes[i] = new Node(x, y, p);
+            linkedLists[i] = new LinkedList<>();
         }
 
-        in.close();
+        Cow[] cows = new Cow[n];
 
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                nodeDist[i][j] = Math.hypot(nodes[i].x-nodes[j].x, nodes[i].y-nodes[j].y);
+            int x = nextInt();
+            int y = nextInt();
+            int p = nextInt();
+
+            cows[i] = new Cow(x, y, p);
+        }
+
+        for (int i = 0; i < n; i++) {
+
+            Cow ci = cows[i];
+
+            for (int j = i+1; j < n; j++) {
+                Cow cj = cows[j];
+
+                double dist = distance(ci, cj);
+
+                if (ci.transmition >= dist) {
+                    linkedLists[i].add(j);
+                }
+
+                if (cj.transmition >= dist) {
+                    linkedLists[j].add(i);
+                }
             }
         }
 
-        Graph g = new Graph(n);
+        int result = 0;
 
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                g.addEdge(i, j);
+            // i is the starting cow
+            boolean[] visited = new boolean[n];
+
+            Stack<Integer> stack = new Stack<>();
+
+            stack.add(i);
+            visited[i] = true;
+
+            int result_i = 1;
+
+            while (!stack.isEmpty()) {
+                int cur = stack.pop();
+
+                for (int friend : linkedLists[cur]) {
+                    if (!visited[friend]) {
+                        result_i++;
+                        visited[friend] = true;
+                        stack.add(friend);
+                    }
+                }
             }
+
+            result = Math.max(result, result_i);
         }
 
-        for (int i = 0; i < n; i++) {
-            maxBroadcast = Math.max(maxBroadcast, g.DFS(i));
-            curBroadcast = 0;
-        }
-
-        int result = maxBroadcast;
         PrintWriter out = new PrintWriter(new File("moocast.out"));
         System.out.println(result);
         out.println(result);
         out.close();
     }
 
-    static class Node {
-        int x, y, p;
-
-        Node(int x, int y, int p) {
-            this.x = x;
-            this.y = y;
-            this.p = p;
-        }
+    private static double distance(Cow c1, Cow c2) {
+        return Math.sqrt(Math.pow((c1.x - c2.x), 2) + Math.pow((c1.y - c2.y), 2));
     }
 
-    static class Graph
-    {
-        private int V;   // No. of vertices
+    private static class Cow {
+        int x, y;
+        int transmition;
 
-        // Array  of lists for Adjacency List Representation
-        private LinkedList[] adj;
-
-        // Constructor
-        Graph(int v)
-        {
-            V = v;
-            adj = new LinkedList[v];
-            for (int i=0; i<v; ++i)
-                adj[i] = new LinkedList();
+        Cow(int x, int y, int transmition) {
+            this.x = x;
+            this.y = y;
+            this.transmition = transmition;
         }
 
-        //Function to add an edge into the graph
-        void addEdge(int v, int w)
-        {
-            adj[v].add(w);  // Add w to v's list.
-        }
-
-        void DFSUtil(int v,boolean visited[])
-        {
-            visited[v] = true;
-            curBroadcast++;
-
-            // Recur for all the vertices adjacent to this vertex
-            Iterator<Integer> i = adj[v].listIterator();
-            while (i.hasNext())
-            {
-                int n = i.next();
-                if (!visited[n] && nodeDist[v][n] <= nodes[v].p)
-                    DFSUtil(n, visited);
-            }
-        }
-
-        // The function to do DFS traversal. It uses recursive DFSUtil()
-        private int DFS(int v)
-        {
-            // Mark all the vertices as not visited(set as
-            // false by default in java)
-            boolean visited[] = new boolean[V];
-
-            // Call the recursive helper function to print DFS traversal
-            DFSUtil(v, visited);
-
-            return curBroadcast;
-        }
     }
 }
 

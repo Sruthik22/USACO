@@ -7,58 +7,66 @@ import java.util.*;
 import java.io.*;
 
 public class angry {
-    private static int n;
-    private static int k;
-    private static int[] xpos;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("angry.in"));
-        n = in.nextInt();
-        k = in.nextInt(); // num cows to shoot
+    static StreamTokenizer in;
 
-        xpos = new int[n];
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
+
+    static String next() throws IOException {
+        in.nextToken();
+        return in.sval;
+    }
+
+    static int n;
+    static int k;
+    static int[] positions;
+
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("angry.in")));
+
+        n = nextInt();
+        k = nextInt();
+
+        positions = new int[n];
 
         for (int i = 0; i < n; i++) {
-            xpos[i] = in.nextInt();
+            positions[i] = nextInt();
         }
 
-        Arrays.sort(xpos);
+        Arrays.sort(positions);
 
-        in.close();
+        int low = -1; // nothing is desired this point and lower
+        int high = 1000000; // at this point and higher everything is always true
 
-        int lowerBound = 0;
-        int upperBound = xpos[n-1] - xpos[0];
-
-        while (lowerBound < upperBound) {
-            int mid = (lowerBound + upperBound) / 2;
-            if (simulate(mid)) {
-                upperBound = mid;
-            }
-
-            else lowerBound = mid+1;
+        while (high - low > 1) {
+            int mid = (low + high)/2;
+            if (check(mid)) high = mid;
+            else low = mid;
         }
 
-        int result = lowerBound;
+        int result = high;
         PrintWriter out = new PrintWriter(new File("angry.out"));
         System.out.println(result);
         out.println(result);
         out.close();
     }
 
-    private static boolean simulate(int r) {
-
-        int farthestX = 0;
-
-        int cowsUsed = 0;
+    private static boolean check(int r) {
+        int until = 0;
+        int cows_remaining = k;
 
         for (int i = 0; i < n; i++) {
-            if (xpos[i] > farthestX) {
-                // then need to use another cow
-                cowsUsed++;
-                farthestX = 2 * r + xpos[i];
+            int pos  = positions[i];
 
-                if (cowsUsed > k) return false;
-            }
+            if (pos <= until) continue;
+
+            cows_remaining--;
+            until = pos + 2 * r;
+
+            if (cows_remaining < 0) return false;
         }
 
         return true;

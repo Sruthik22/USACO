@@ -18,54 +18,68 @@ public class cereal {
     public static void main(String[] args) throws Exception {
         in = new StreamTokenizer(new BufferedReader(new FileReader("cereal.in")));
 
-        int n = nextInt();
-        int m = nextInt();
+        int n = nextInt(); // Number of cows
+        int m = nextInt(); // Number of cereal boxes
 
-        int[] first = new int[n]; //id - pos
-        int[] second = new int[n];
+        int[] box_distribution = new int[m+1]; // each of the index will be filled with the id of the cow
 
-        for (int i = 0; i < n; i++) {
-            int c1 = nextInt()-1;
-            int c2 = nextInt()-1;
+        HashMap<Integer, int[]> cows = new HashMap<>(); // choice 1, choice 2
 
-            first[i] = c1;
-            second[i] = c2;
+        for (int i = 1; i <= n; i++) {
+            int f = nextInt();
+            int s = nextInt();
+
+            cows.put(i, new int[] {f, s});
         }
 
-        int[] cereals = new int[m]; //pos - id
+        int cur_num = 0;
 
         int[] results = new int[n];
 
-        int lastResult = 0;
+        for (int i = n; i >= 1; i--) {
 
-        for (int i = n-1; i >= 0; i--) {
+            // the cow will take its first spot, but it will knock out the other cow
+            // we need to map out what happens to the other cow
 
-            int j = i;
-            int pos = first[i];
+            int cow_id = i;
+            int choice = cows.get(cow_id)[0];
 
             while (true) {
-                if (cereals[pos] == 0) {
-                    cereals[pos] = j;
-                    lastResult++;
+                if (box_distribution[choice] == 0) {
+                    // this means that the cow can just take the spot
+                    box_distribution[choice] = cow_id;
+                    cur_num++;
                     break;
-                } else if (cereals[pos] < j) break;
-                else {
-                    int k = cereals[pos];
-                    cereals[pos] = j;
-                    if (pos == second[k]) break;
-                    j = k;
-                    pos = second[k];
                 }
+
+                // need to get the details of the cow in this current position
+
+                int other_cow = box_distribution[choice];
+
+                if (other_cow < cow_id) break;
+
+                // we will replace the cow in this position
+
+                box_distribution[choice] = cow_id;
+
+                // need to check what choice this was for the other cow
+
+                int second_choice = cows.get(other_cow)[1];
+
+                if (choice == second_choice) break;
+
+                cow_id = other_cow;
+                choice = second_choice;
             }
 
-            results[i] = lastResult;
+            results[i-1] = cur_num;
         }
 
         PrintWriter out = new PrintWriter(new File("cereal.out"));
 
-        for (int i = 0; i < n; i++) {
-            System.out.println(results[i]);
-            out.println(results[i]);
+        for (int i : results) {
+            System.out.println(i);
+            out.println(i);
         }
 
         out.close();

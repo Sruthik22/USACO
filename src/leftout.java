@@ -8,100 +8,105 @@ import java.io.*;
 
 public class leftout {
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("leftout.in"));
-        int n = in.nextInt();
+    static StreamTokenizer in;
 
-        int[][] grid = new int[n][n];
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
+
+    static String next() throws IOException {
+        in.nextToken();
+        return in.sval;
+    }
+
+    static int n;
+    static int[][] grid;
+
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("leftout.in")));
+
+        n = nextInt();
+
+        grid = new int[n][n];
 
         for (int i = 0; i < n; i++) {
-            String s = in.next();
+            String row = next();
             for (int j = 0; j < n; j++) {
-                if (s.charAt(j) == 'R') {
-                    grid[i][j] = 0;
-                }
+                char c = row.charAt(j);
 
-                else grid[i][j] = 1;
+                if (c == 'R') grid[i][j] = 1;
+                else grid[i][j] = 0;
             }
         }
 
-        in.close();
+        // columns
+        for (int i = 0; i < n; i++) {
+            fixColumn(i);
+        }
 
-        //first row
+        // rows
+        for (int i = 0; i < n; i++) {
+            fixRow(i);
+        }
+
+        int num = 0;
 
         for (int i = 0; i < n; i++) {
-            if (grid[i][0] == 1) {
-                for (int j = 0; j < n; j++) {
-                    grid[i][j] = (grid[i][j] + 1) % 2; // toggle
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 1) {
+                    // odd one
+                    num++;
                 }
             }
         }
 
-        // first column
+        String result = "";
 
-        for (int i = 0; i < n; i++) {
-            if (grid[0][i] == 1) {
-                for (int j = 0; j < n; j++) {
-                    grid[j][i] = (grid[j][i] + 1) % 2; // toggle
-                }
-            }
+        if (num == (n-1) * (n-1)) {
+            result = "1 1";
         }
 
-        // check if there is one 1, a row of 1
-
-        int x = 0;
-        int y = 0;
-
-        if (grid[1][1] == 1 && grid[2][2] == 1) {
-            x = 1;
-            y = 1;
-        }
-
-        else {
-            for (int i = 1; i < n; i++) {
-                for (int j = 1; j < n; j++) {
-                    if (grid[i][j] == 1) {
-                        if (i+1 < n && grid[i+1][j] == 1) {
-                            x = 1;
-                            y = j+1;
-                            break;
-                        }
-
-                        if (j+1 < n && grid[i][j+1] == 1) {
-                            x = i+1;
-                            y = 1;
-                            break;
-                        }
-                    }
-                }
-
-                if (x != 0 || y != 0) break;
-            }
-        }
-
-        boolean already = false;
-
-        if (x == 0 && y == 0) {
+        else if (num == 1) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    if (grid[i][j] == 1 && already) {
-                        x = 0;
-                        y = 0;
-                        break;
-                    }
                     if (grid[i][j] == 1) {
-                        x = i + 1;
-                        y = j + 1;
-
-                        already = true;
+                        result = (i+1) + " " + (j+1);
                     }
                 }
             }
         }
 
-        String result = "" + x + " " + y;
+        else if (num == (n-1)) {
 
-        if (x == 0 && y == 0) {
+            boolean done = false;
+
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (grid[i][j] == 1) {
+                        if (grid[i][j+1] == 1) {
+                            result = (i+1) + " " + (1);
+
+                            done = true;
+                            break;
+                        }
+
+                        if (grid[i+1][j] == 1) {
+                            result = (1) + " " + (j+1);
+
+                            done = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (done) {
+                    break;
+                }
+            }
+        }
+
+        if (result.equals("")) {
             result = "-1";
         }
 
@@ -111,19 +116,25 @@ public class leftout {
         out.close();
     }
 
+    static void fixColumn(int index) {
+        int initial = grid[0][index];
 
-  
- /*
- ANALYSIS
+        if (initial == 0) return;
 
-WHEN TRYING TO SOLVE AN UNSOLVABLE PROBLEM
-find an invariant, a case which prevents solution
+        for (int i = 0; i < n; i++) {
+            grid[i][index] = (grid[i][index]+1)%2;
+        }
+    }
 
-using logic, to find out how to find bad rectangles
+    static void fixRow(int index) {
+        int initial = grid[index][0];
 
-then based on results find out which element is bad.
+        if (initial == 0) return;
 
- */
+        for (int i = 0; i < n; i++) {
+            grid[index][i] = (grid[index][i]+1)%2;
+        }
+    }
 }
 
 

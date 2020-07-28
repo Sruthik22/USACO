@@ -19,8 +19,3 @@ public static void main(String[] args) throws Exception {
     out.println(result);
     out.close();
   }
-  
- /*
- ANALYSIS
- 
- */

@@ -1,7 +1,7 @@
 #if (${PACKAGE_NAME} && ${PACKAGE_NAME} != "")
 package ${PACKAGE_NAME};#end
 
-#if (${PROJECT_NAME} == "USACO" && ${PACKAGE_NAME} != "KTBYTE_CLASS")
+#if (${PROJECT_NAME} == "USACO")
 #parse("File Header.java")
 
 public class ${NAME} {

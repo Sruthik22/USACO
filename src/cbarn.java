@@ -15,72 +15,54 @@ public class cbarn {
         return (int) in.nval;
     }
 
-    static String next() throws IOException {
-        in.nextToken();
-        return in.sval;
-    }
-
-    static int indexOfMax;
-
     public static void main(String[] args) throws Exception {
         in = new StreamTokenizer(new BufferedReader(new FileReader("cbarn.in")));
 
         int n = nextInt();
 
-        int[] circularBarn = new int[n];
-
-        indexOfMax = 0;
-        int max = 0;
+        int[] barn = new int[n];
 
         for (int i = 0; i < n; i++) {
-            int num = nextInt();
-
-            circularBarn[i] = num;
-
-            if (num >= max) {
-                indexOfMax = i;
-                max = num;
-            }
+            barn[i] = nextInt();
         }
 
-        int result = 0;
+        int result = Integer.MAX_VALUE;
 
-        PriorityQueue<Cow> cows = new PriorityQueue<>();
+        for (int startIndex = 0; startIndex < n; startIndex++) {
+            PriorityQueue<Integer> timesOfCows = new PriorityQueue<>();
 
-        for (int i = 0; i < n; i++) {
-            int index = ( indexOfMax + i ) % n;
+            int curCost = 0;
 
-            if (circularBarn[index] != 0) {
-                int numCows = circularBarn[index];
+            boolean finished = true;
 
-                for (int j = 0; j < numCows; j++) {
-                    cows.add(new Cow(i));
+            // go around the entire barn
+            for (int i = 0; i < n; i++) {
+                int curIndex = (startIndex + i) % n;
+
+                // add all waiting cows
+                for (int j = 0; j < barn[curIndex]; j++) {
+                    timesOfCows.add(i);
                 }
+
+                Integer nextCow = timesOfCows.poll();
+
+                if (nextCow == null) {
+                    finished = false;
+                    break;
+                }
+
+                curCost += Math.pow((i - nextCow), 2);
             }
 
-            if (cows.peek().start == i) continue;
-
-            Cow c = cows.poll();
-            result += Math.pow(i - c.start, 2);
+            if (finished) {
+                result = Math.min(result, curCost);
+            }
         }
 
         PrintWriter out = new PrintWriter(new File("cbarn.out"));
         System.out.println(result);
         out.println(result);
         out.close();
-    }
-
-    static class Cow implements Comparable<Cow> {
-        int start; // the iteration that it was added
-
-        Cow (int value) {
-            this.start = value;
-        }
-
-        @Override
-        public int compareTo(Cow o) {
-            return this.start - o.start; // want the least to be the first in the queue
-        }
     }
 }
 

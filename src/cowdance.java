@@ -8,134 +8,75 @@ import java.io.*;
 
 public class cowdance {
 
-    private static int n;
-    private static int[] cowDurations;
-    private static int tMax;
+    static StreamTokenizer in;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("cowdance.in"));
-        n = in.nextInt(); // # of cows
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
 
-        tMax = in.nextInt();
-        cowDurations = new int[n];
+    static int n;
+    static int t_max;
+    static int[] durations;
+
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("cowdance.in")));
+
+        n = nextInt();
+        t_max = nextInt();
+
+        durations = new int[n];
 
         for (int i = 0; i < n; i++) {
-            cowDurations[i] = in.nextInt();
+            durations[i] = nextInt();
         }
 
-        in.close();
-
         int low = -1; // nothing is desired this point and lower
-        int high = n; // at this point and higher everything is always true
+        int high = 10000; // at this point and higher everything is always true
 
         while (high - low > 1) {
             int mid = (low + high)/2;
-
-            if (kWorks(mid)) high = mid;
+            if (check(mid)) high = mid;
             else low = mid;
         }
 
         int result = high;
-
         PrintWriter out = new PrintWriter(new File("cowdance.out"));
         System.out.println(result);
         out.println(result);
         out.close();
     }
 
-    private static boolean kWorks(int kValue) {
-        // use k cows on the stage
+    private static boolean check(int k) {
+        PriorityQueue<Integer> cows = new PriorityQueue<>();
 
-        int currentTime = 0;
+        // we need to remove the fastest cow, every time and replace -- can achieve with a priority queue
 
-        int[] kTimes = new int[kValue];
-
-        // initial filling
-        System.arraycopy(cowDurations, 0, kTimes, 0, kValue);
-
-        for (int i = 0; i < n - kValue; i++) {
-            // get the min value
-            int[] stuffs = getMinValue(kTimes);
-
-            int minValue = stuffs[0];
-            int index = stuffs[1];
-
-            kTimes[index] = minValue + cowDurations[kValue + i];
-
-            currentTime += minValue - currentTime;
+        for (int i = 0; i < Math.min(k, n); i++) {
+            cows.add(durations[i]);
         }
 
-        currentTime += getMaxValue(kTimes) - currentTime;
+        int time = 0;
 
-        return currentTime <= tMax;
-    }
-
-
-    private static boolean classDiscussion(int kValue) {
-        PriorityQueue<Integer> finishTimes = new PriorityQueue<>();
-
-        for (int i = 0; i < kValue; i++) {
-            finishTimes.add(cowDurations[i]);
-        }
-
-        for (int i = kValue; i < n; i++) {
-            int t = finishTimes.poll();
-            t += cowDurations[i];
-
-            if (t > tMax) return false;
-            finishTimes.add(t);
-        }
-
-        return true;
-    }
-
-    /*
-    STACKS and QUEUES
-
-    stack first in last out
-    queue first in first out
-
-    */
-
-
-
-    // getting the maximum value
-    private static int getMaxValue(int[] array) {
-        int maxValue = array[0];
-
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] > maxValue) {
-                maxValue = array[i];
+        for (int i = k; i < n; i++) {
+            if (cows.size() == k) {
+                time = cows.poll();
+                if (time > t_max) return false;
             }
+
+            // need to add the current cow
+
+            cows.add(durations[i] + time);
         }
 
-        return maxValue;
-    }
+        int size = cows.size();
 
-    // getting the miniumum value
-    private static int[] getMinValue(int[] array) {
-        int minValue = array[0];
-        int index = 0;
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] < minValue) {
-                index = i;
-                minValue = array[i];
-            }
+        for (int i = 0; i < size; i++) {
+            time = cows.poll();
         }
-        int[] returnableArray = new int[2];
-        returnableArray[0] = minValue;
-        returnableArray[1] = index;
-        return returnableArray;
+
+        return time <= t_max;
     }
 }
-
-/*
-
-
-Find the min of the first k numbers, then add the next value, k+the value, then repeat until no more to loop through.
-
-Final time is the current time + the max in the array.
-
-*/
 
 

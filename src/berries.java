@@ -3,70 +3,66 @@
 
 // https://content.ktbyte.com/problem.java
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.io.*;
 
 public class berries {
 
-    static int mod;
+    static StreamTokenizer in;
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("berries.in"));
-        int n = in.nextInt(); // num of berry trees
-        int k = in.nextInt(); // num of baskets
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
 
-        /* the key to the problem: all of the top k/2 should be the same value (think about it, to have the most berries left over, why want any extra in the top k/2"
-        * but how to pick the value for the top k/2? There are only 1000 different values! Just loop through all values  */
+    static Berry[] berries;
 
-        ArrayList<Integer> berries = new ArrayList<>();
+    static int mod = 1;
 
-        int max = 0;
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("berries.in")));
+
+        int n = nextInt();
+        int k = nextInt();
+
+        berries = new Berry[n];
+
+        int max_berries = 0;
 
         for (int i = 0; i < n; i++) {
-            berries.add(in.nextInt());
-            max = Math.max(max, berries.get(i));
-        }
+            berries[i] = new Berry(nextInt());
 
-        in.close();
+            max_berries = Math.max(max_berries, berries[i].val);
+        }
 
         int result = 0;
 
-        for (int b = 1; b <= max; b++) {
-            int total = 0; // how many full b's there are
+        for (int i = 1; i < max_berries; i++) {
 
-            for (int i = 0; i < n; i++) {
-                total += berries.get(i) / b;
-            }
+            int num_baskets = number_of_baskets(i);
 
-            if (total < k/2) {
-                break;
-            }
+            if (num_baskets >= k) result = i * (k/2);
 
-            if (total >= k) {
-                result = Math.max(result, b * (k/2));
-                continue;
-            }
+            else {
+                if (num_baskets >= k/2) {
+                    int more = k - num_baskets;
+                    int have = k/2 - more;
 
-            int soFar = (total - k/2)*b;
+                    mod = i;
 
-            mod = b;
+                    Arrays.sort(berries);
 
-            // need to sort the array based on the mods
-            berries.sort(new Comparator<Integer>() {
+                    int left_add = 0;
 
-                @Override
-                public int compare(Integer o1, Integer o2) {
-                    return -(o1 % mod - o2 % mod);
+                    for (int j = 0; j < Math.min(more, berries.length); j++) {
+                        left_add += berries[j].val % i;
+                    }
+
+                    int cur = have * i + left_add;
+
+                    result = Math.max(result, cur);
                 }
-            });
-
-            for (int i = 0; i < n && i < k-total; i++) {
-                soFar+=berries.get(i)%b;
             }
-
-            result = Math.max(result, soFar);
-
         }
 
         PrintWriter out = new PrintWriter(new File("berries.out"));
@@ -75,13 +71,27 @@ public class berries {
         out.close();
     }
 
-    private static int mod(int o, int b) {
-        return o%b;
+    private static class Berry implements Comparable<Berry> {
+        int val;
+
+        Berry(int val) {
+            this.val = val;
+        }
+
+        @Override
+        public int compareTo(Berry o) {
+            return - this.val % mod + o.val % mod;
+        }
     }
 
+    static int number_of_baskets(int berries_per) {
+        int total = 0;
+        for (Berry i : berries) {
+            total += i.val / berries_per;
+        }
 
-
-
+        return total;
+    }
 }
 
 

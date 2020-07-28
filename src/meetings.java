@@ -8,76 +8,98 @@ import java.io.*;
 
 public class meetings {
 
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner in = new Scanner(new File("meetings.in"));
-        int n = in.nextInt();
-        int l = in.nextInt();
+    static StreamTokenizer in;
+
+    static int nextInt() throws IOException {
+        in.nextToken();
+        return (int) in.nval;
+    }
+
+    public static void main(String[] args) throws Exception {
+        in = new StreamTokenizer(new BufferedReader(new FileReader("meetings.in")));
+
+        int n = nextInt();
+        int l = nextInt();
 
         Cow[] cows = new Cow[n];
 
-        double weightToReach = 0;
+        int numRight = 0;
+
+        int totalWeight = 0;
 
         for (int i = 0; i < n; i++) {
-            int weight = in.nextInt();
-            int x = in.nextInt();
-            int direction = in.nextInt();
+            int w = nextInt();
+            totalWeight += w;
+            int x = nextInt();
+            int d = nextInt();
 
-            cows[i] = new Cow(weight, x, direction);
+            if (d == 1) {
+                numRight++;
+            }
 
-            weightToReach+=weight;
+            cows[i] = new Cow(w,x,d);
         }
 
-        in.close();
+        int numLeft = n - numRight;
 
-        weightToReach /= 2.0;
+        Arrays.sort(cows, new CustomComparator());
 
-        Arrays.sort(cows, (c1, c2) -> c1.x - c2.x);
-
-
-        int numRight = n-1;
-        int numLeft = 0;
+        ArrayList<Integer> rightTimes = new ArrayList<>();
+        ArrayList<Integer> leftTimes = new ArrayList<>();
 
         for (int i = 0; i < n; i++) {
-            if (cows[i].direction == -1) {
-                cows[numLeft].time = cows[i].x;
-                numLeft++;
+            Cow c = cows[i];
+            if (c.d == 1) {
+                rightTimes.add(l - c.x);
+            }
+
+            else {
+                leftTimes.add(c.x);
             }
         }
 
-        for (int i = n-1; i >= 0; i--) {
-            if (cows[i].direction == 1) {
-                cows[numRight].time = l - cows[i].x;
-                numRight--;
-            }
+        for (int i = 0; i < numLeft; i++) {
+            Cow c = cows[i];
+            c.timeToFinish = leftTimes.get(i);
+        }
+
+        for (int i = n-1; i >= n - numRight; i--) {
+            Cow c = cows[i];
+            c.timeToFinish = rightTimes.get(rightTimes.size() - (n - i));
         }
 
         Arrays.sort(cows);
 
-        int T = 0;
-        int totalWeight = 0;
-
-        for (int i = 0; i < n; i++) {
-
-            if (totalWeight >= weightToReach) break;
-
-            totalWeight+=cows[i].weight;
-            T=cows[i].time;
+        int weight = 0;
+        int index = 0;
+        int t = 0;
+        while (weight < (double) (totalWeight) / 2) {
+            Cow c = cows[index];
+            weight += c.w;
+            index++;
+            t = c.timeToFinish;
         }
 
+        Arrays.sort(cows, new CustomComparator());
+
+        ArrayList<Integer> cow_to_check = new ArrayList<>();
         int result = 0;
 
-        Arrays.sort(cows, (c1, c2) -> c1.x - c2.x);
-
-        Queue<Integer> cowMeetings = new LinkedList<>();
-
         for (int i = 0; i < n; i++) {
-            if (cows[i].direction == -1) {
-                while (cowMeetings.size() > 0 && cowMeetings.peek() + 2 * T < cows[i].x) cowMeetings.poll();
+            if (cows[i].d == 1) cow_to_check.add(cows[i].x);
+            else {
+                // need to check if current cow intersects with any of the cow_to_check
 
-                result+= cowMeetings.size();
+                for (int j = cow_to_check.size()-1; j >= 0; j--) {
+                    if (2 * t - (cows[i].x - cow_to_check.get(j)) >= 0) {
+                        result++;
+                    }
+                    else {
+                        // for anyone it doesn't work, we can remove them
+                        cow_to_check.remove(j);
+                    }
+                }
             }
-
-            else cowMeetings.add(cows[i].x);
         }
 
         PrintWriter out = new PrintWriter(new File("meetings.out"));
@@ -86,18 +108,28 @@ public class meetings {
         out.close();
     }
 
-    static class Cow implements Comparable<Cow> {
-        int direction, weight, time, x;
+    public static class CustomComparator implements Comparator<Cow> {
+        @Override
+        public int compare(Cow o1, Cow o2) {
+            return o1.x - o2.x;
+        }
 
-        Cow(int weight, int x, int direction) {
-            this.direction = direction;
+    }
+
+    static class Cow implements Comparable<Cow>{
+        int w,x,d, timeToFinish;
+
+        Cow (int w, int x, int d) {
+            this.w = w;
             this.x = x;
-            this.weight = weight;
+            this.d = d;
         }
 
         @Override
         public int compareTo(Cow o) {
-            return this.time - o.time;
+            return this.timeToFinish - o.timeToFinish;
         }
     }
 }
+
+

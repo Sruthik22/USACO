@@ -15,62 +15,53 @@ public class moop {
         return (int) in.nval;
     }
 
-    static String next() throws IOException {
-        in.nextToken();
-        return in.sval;
-    }
-
-    static boolean[] visited;
-    static LinkedList<Integer>[] linkedLists;
-
     public static void main(String[] args) throws Exception {
         in = new StreamTokenizer(new BufferedReader(new FileReader("moop.in")));
 
         int n = nextInt();
 
-        linkedLists = new LinkedList[n];
-
         Point[] points = new Point[n];
-
-        for (int i = 0; i < n; i++) {
-            linkedLists[i] = new LinkedList<>();
-        }
 
         for (int i = 0; i < n; i++) {
             int x = nextInt();
             int y = nextInt();
 
-            points[i] = new Point(x, y);
+            Point p = new Point(x, y);
+
+            points[i] = p;
         }
 
+        Arrays.sort(points);
+
+        ArrayList<Integer> ys = new ArrayList<>();
+
         for (int i = 0; i < n; i++) {
-            for (int j = i+1; j < n; j++) {
-                Point p1 = points[i];
-                Point p2 = points[j];
+            Point p = points[i];
 
-                if (p1.x <= p2.x && p1.y <= p2.y) {
-                    linkedLists[i].add(j);
-                    linkedLists[j].add(i);
-                }
+            int y = p.y;
 
-                else if (p2.x <= p1.x && p2.y <= p1.y) {
-                    linkedLists[i].add(j);
-                    linkedLists[j].add(i);
+            if (ys.isEmpty()) ys.add(y);
+
+            else {
+                if (ys.get(0) > y) ys.add(0, y);
+
+                else {
+                    // we need to delete all of the values that are above the least value, and less than the y values
+
+                    int index = next(ys, y);
+
+                    if (index < 0) {
+                        // we need to delete all of the values other than first value
+
+                        ys.subList(1, ys.size()).clear();
+                    }
+
+                    else ys.subList(1, index).clear();
                 }
             }
         }
 
-        visited = new boolean[n];
-
-        int result = 0;
-
-        for (int i = 0; i < n; i++) {
-            if (!visited[i]) {
-                dfs(i);
-
-                result++;
-            }
-        }
+        int result = ys.size();
 
         PrintWriter out = new PrintWriter(new File("moop.out"));
         System.out.println(result);
@@ -78,22 +69,47 @@ public class moop {
         out.close();
     }
 
-    static void dfs (int node) {
-        if (visited[node]) return;
+    private static int next(ArrayList<Integer> arr, int target)
+    {
+        int start = 0, end = arr.size() - 1;
 
-        visited[node] = true;
+        int ans = -1;
+        while (start <= end) {
+            int mid = (start + end) / 2;
 
-        for (int i: linkedLists[node]) {
-            dfs(i);
+            // Move to right side if target is
+            // greater.
+            if (arr.get(mid) <= target) {
+                start = mid + 1;
+            }
+
+            // Move left side.
+            else {
+                ans = mid;
+                end = mid - 1;
+            }
         }
+        return ans;
     }
 
-    static class Point {
+    static class Point implements Comparable<Point> {
         int x, y;
 
-        Point (int x, int y) {
+        Point(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+
+        @Override
+        public int compareTo(Point o) {
+
+            if (this.x - o.x == 0) {
+                // we want the higher y to be after the previous
+
+                return this.y - o.y;
+            }
+
+            return this.x - o.x;
         }
     }
 }
