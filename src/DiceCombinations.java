@@ -1,4 +1,9 @@
-static class InputReader {
+import java.util.*;
+import java.io.*;
+
+public class DiceCombinations {
+
+    static class InputReader {
         public BufferedReader reader;
         public StringTokenizer tokenizer;
 
@@ -34,7 +39,7 @@ static class InputReader {
             return Long.parseLong(next());
         }
     }
-    
+
     static class CPMath {
         static int add(int a, int b) {
             a += b;
@@ -71,26 +76,32 @@ static class InputReader {
         }
     }
 
+    static int mod = (int) (1e9 + 7);
+
     static InputReader sc;
     static PrintWriter pw;
 
-    static int mod = (int) (1e9 + 7);
 
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-       
+        int n = sc.nextInt();
 
+        int[] dp = new int[n + 1];
+        dp[0] = 1;
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= 6; j++) {
+                if (i - j >= 0) {
+                    dp[i] = CPMath.add(dp[i], dp[i-j]);
+                }
+            }
+        }
+
+        pw.println(dp[n]);
         pw.close();
     }
+}
 
-public static void main(String[] args) throws Exception {
-    in = new StreamTokenizer(new BufferedReader(new FileReader("${NAME}.in")));
 
-    int result = 0;
-    PrintWriter out = new PrintWriter(new File("${NAME}.out"));
-    System.out.println(result);
-    out.println(result);
-    out.close();
-  }

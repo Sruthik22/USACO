@@ -1,4 +1,9 @@
-static class InputReader {
+import java.util.*;
+import java.io.*;
+
+public class BoboniuBalls {
+
+    static class InputReader {
         public BufferedReader reader;
         public StringTokenizer tokenizer;
 
@@ -34,63 +39,47 @@ static class InputReader {
             return Long.parseLong(next());
         }
     }
-    
-    static class CPMath {
-        static int add(int a, int b) {
-            a += b;
-
-            if (a >= mod) a -= mod;
-
-            return a;
-        }
-        static int sub(int a, int b) {
-            a -= b;
-            if (a < 0) a+= mod;
-            return a;
-        }
-        static int multiply(int a, long b) {
-            b = a * b;
-            return (int) (b % mod);
-        }
-        static int inverse(int a) {
-            return power(a, mod - 2);
-        }
-        static int power(int a, int b) {
-            int r = 1;
-
-            while (b > 0) {
-                if (b % 2 == 1) {
-                    r = multiply(r, a);
-                }
-
-                a = multiply(a, a);
-                b /= 2;
-            }
-
-            return r;
-        }
-    }
 
     static InputReader sc;
     static PrintWriter pw;
 
-    static int mod = (int) (1e9 + 7);
 
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-       
+        int t = sc.nextInt();
+
+        for (int tt = 0; tt < t; tt++) {
+            int r = sc.nextInt();
+            int g = sc.nextInt();
+            int b = sc.nextInt();
+            int w = sc.nextInt();
+
+            if (count(r, g, b, w) <= 1) pw.println("Yes");
+            else {
+                if (r >= 1 && g >= 1 && b >= 1) {
+                    if (count(r - 1, g - 1, b - 1, w + 3) <= 1) pw.println("Yes");
+                    else pw.println("No");
+                }
+
+                else {
+                    pw.println("No");
+                }
+            }
+        }
 
         pw.close();
     }
 
-public static void main(String[] args) throws Exception {
-    in = new StreamTokenizer(new BufferedReader(new FileReader("${NAME}.in")));
+    static int count(int a, int b, int c, int d) {
+        int count = 0;
+        if ((a & 1) == 1) count++;
+        if ((b & 1) == 1) count++;
+        if ((c & 1) == 1) count++;
+        if ((d & 1) == 1) count++;
+        return count;
+    }
+}
 
-    int result = 0;
-    PrintWriter out = new PrintWriter(new File("${NAME}.out"));
-    System.out.println(result);
-    out.println(result);
-    out.close();
-  }
+
