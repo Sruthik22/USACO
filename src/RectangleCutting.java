@@ -1,4 +1,9 @@
-static class InputReader {
+import java.util.*;
+import java.io.*;
+
+public class RectangleCutting {
+
+    static class InputReader {
         public BufferedReader reader;
         public StringTokenizer tokenizer;
 
@@ -34,7 +39,7 @@ static class InputReader {
             return Long.parseLong(next());
         }
     }
-    
+
     static class CPMath {
         static int add(int a, int b) {
             a += b;
@@ -43,21 +48,22 @@ static class InputReader {
 
             return a;
         }
+
         static int sub(int a, int b) {
             a -= b;
-            if (a < 0) a+= mod;
+            if (a < 0) a += mod;
             return a;
         }
+
         static int multiply(int a, long b) {
             b = a * b;
             return (int) (b % mod);
         }
-        static int divide(int a, int b) {
-            return multiply(a, inverse(b));
-        }
+
         static int inverse(int a) {
             return power(a, mod - 2);
         }
+
         static int power(int a, int b) {
             int r = 1;
 
@@ -83,14 +89,35 @@ static class InputReader {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-       
+        int a = sc.nextInt();
+        int b = sc.nextInt();
 
+        int[][] dp = new int[a + 1][b + 1];
+
+        for (int i = 0; i <= a; i++) {
+            for (int j = 0; j <= b; j++) {
+                dp[i][j] = Integer.MAX_VALUE;
+            }
+        }
+
+        for (int i = 1; i <= Math.min(a, b); i++) {
+            dp[i][i] = 0;
+        }
+
+        for (int i = 1; i <= a; i++) {
+            for (int j = 1; j <= b; j++) {
+                for (int k = 1; k < i; k++) {
+                    dp[i][j] = Math.min(dp[i][j], dp[k][j] + dp[i - k][j] + 1);
+                }
+                for (int k = 1; k < j; k++) {
+                    dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[i][j - k] + 1);
+                }
+            }
+        }
+
+        pw.println(dp[a][b]);
         pw.close();
     }
+}
 
-public static void main(String[] args) throws Exception {
-    sc = new InputReader(new FileInputStream("${NAME}.in"));
-    pw = new PrintWriter(new File("${NAME}.out"));
-    
-    pw.close();
-  }
+

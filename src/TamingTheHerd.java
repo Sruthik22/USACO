@@ -1,4 +1,9 @@
-static class InputReader {
+import java.util.*;
+import java.io.*;
+
+public class TamingTheHerd {
+
+    static class InputReader {
         public BufferedReader reader;
         public StringTokenizer tokenizer;
 
@@ -34,7 +39,7 @@ static class InputReader {
             return Long.parseLong(next());
         }
     }
-    
+
     static class CPMath {
         static int add(int a, int b) {
             a += b;
@@ -43,21 +48,26 @@ static class InputReader {
 
             return a;
         }
+
         static int sub(int a, int b) {
             a -= b;
-            if (a < 0) a+= mod;
+            if (a < 0) a += mod;
             return a;
         }
+
         static int multiply(int a, long b) {
             b = a * b;
             return (int) (b % mod);
         }
+
         static int divide(int a, int b) {
             return multiply(a, inverse(b));
         }
+
         static int inverse(int a) {
             return power(a, mod - 2);
         }
+
         static int power(int a, int b) {
             int r = 1;
 
@@ -80,17 +90,58 @@ static class InputReader {
     static int mod = (int) (1e9 + 7);
 
     public static void main(String[] args) throws Exception {
-        sc = new InputReader(System.in);
-        pw = new PrintWriter(System.out);
+        sc = new InputReader(new FileInputStream("taming.in"));
+        pw = new PrintWriter(new File("taming.out"));
 
-       
+        int n = sc.nextInt();
+
+        int[] nums = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            nums[i] = sc.nextInt();
+        }
+
+        int[][][] dp = new int[n][n][n + 1];
+
+        for (int i = 0; i < n; i++) { // current index
+            for (int j = 0; j <= i; j++) { // the position of the last breakout
+                for (int k = 0; k <= n; k++) { // the number of breakouts
+                    dp[i][j][k] = 1000;
+                }
+            }
+        }
+
+        dp[0][0][1] = nums[0] == 0 ? 0 : 1;
+
+        for (int i = 1; i < n; i++) {
+            for (int j = 0; j <= i; j++) {
+                for (int k = 1; k <= i + 1; k++) {
+                    if (j < i) {
+                        dp[i][j][k] = dp[i - 1][j][k];
+                    }
+                    else {
+                        for (int l = 0; l < i; l++) {
+                            dp[i][j][k] = Math.min(dp[i][j][k], dp[i-1][l][k-1]);
+                        }
+                    }
+
+                    if (nums[i] != (i - j)) dp[i][j][k]++;
+                }
+            }
+        }
+
+        for (int i = 1; i <= n; i++) {
+            int result = 1000;
+
+            for (int j = 0; j < n; j++) {
+                result = Math.min(result, dp[n-1][j][i]);
+            }
+
+            pw.println(result);
+        }
 
         pw.close();
     }
+}
 
-public static void main(String[] args) throws Exception {
-    sc = new InputReader(new FileInputStream("${NAME}.in"));
-    pw = new PrintWriter(new File("${NAME}.out"));
-    
-    pw.close();
-  }
+

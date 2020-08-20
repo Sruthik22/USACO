@@ -1,4 +1,9 @@
-static class InputReader {
+import java.util.*;
+import java.io.*;
+
+public class CountingDivisors {
+
+    static class InputReader {
         public BufferedReader reader;
         public StringTokenizer tokenizer;
 
@@ -34,7 +39,7 @@ static class InputReader {
             return Long.parseLong(next());
         }
     }
-    
+
     static class CPMath {
         static int add(int a, int b) {
             a += b;
@@ -43,21 +48,26 @@ static class InputReader {
 
             return a;
         }
+
         static int sub(int a, int b) {
             a -= b;
-            if (a < 0) a+= mod;
+            if (a < 0) a += mod;
             return a;
         }
+
         static int multiply(int a, long b) {
             b = a * b;
             return (int) (b % mod);
         }
+
         static int divide(int a, int b) {
             return multiply(a, inverse(b));
         }
+
         static int inverse(int a) {
             return power(a, mod - 2);
         }
+
         static int power(int a, int b) {
             int r = 1;
 
@@ -83,14 +93,44 @@ static class InputReader {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-       
+        int n = sc.nextInt();
+        for (int tt = 0; tt < n; tt++) {
+            int x = sc.nextInt();
+
+            HashMap<Integer, Integer> factorization = primeFactors(x);
+
+            int result = 1;
+
+            for (Map.Entry<Integer, Integer> entry: factorization.entrySet()) {
+                result *= (entry.getValue() + 1);
+            }
+
+            pw.println(result);
+        }
 
         pw.close();
     }
 
-public static void main(String[] args) throws Exception {
-    sc = new InputReader(new FileInputStream("${NAME}.in"));
-    pw = new PrintWriter(new File("${NAME}.out"));
-    
-    pw.close();
-  }
+    public static HashMap<Integer, Integer> primeFactors(int n)
+    {
+        HashMap<Integer, Integer> primeFactor = new HashMap<>();
+
+        while (n % 2 == 0) {
+            primeFactor.put(2, primeFactor.getOrDefault(2, 0) + 1);
+            n /= 2;
+        }
+
+        for (int i = 3; i <= Math.sqrt(n); i += 2) {
+            while (n % i == 0) {
+                primeFactor.put(i, primeFactor.getOrDefault(i, 0) + 1);
+                n /= i;
+            }
+        }
+
+        if (n > 2)
+            primeFactor.put(n, 1);
+        return primeFactor;
+    }
+}
+
+

@@ -19,7 +19,7 @@ public class LongestIncreasingSubsequence {
         in = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
         PrintWriter out = new PrintWriter(new BufferedOutputStream(System.out));
 
-        int t = 3;
+        int t = 1;
 
         for (int tt = 0; tt < t; tt++) {
             int n = nextInt();
@@ -70,7 +70,7 @@ public class LongestIncreasingSubsequence {
             }
 
             out.println(result);
-            out.println(sb.reverse().toString());
+            //out.println(sb.reverse().toString());
         }
 
         out.close();
