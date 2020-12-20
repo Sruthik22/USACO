@@ -89,13 +89,17 @@ public class cownav {
 
     static int mod = (int) (1e9 + 7);
 
+    static int n;
+    static char[][] grid;
+    static Point finish;
+
     public static void main(String[] args) throws Exception {
         sc = new InputReader(new FileInputStream("cownav.in"));
         pw = new PrintWriter(new File("cownav.out"));
 
-        int n = sc.nextInt();
+        n = sc.nextInt();
 
-        int[][] grid = new int[n][n];
+        grid = new char[n][n];
 
         for (int i = 0; i < n; i++) {
             String row = sc.next();
@@ -107,14 +111,27 @@ public class cownav {
 
         HashMap<Pair, Integer> hashMap = new HashMap<>();
         Queue<Pair> queue = new LinkedList<>();
-        Pair start = new Pair(new Point(0, 0, 0), new Point(0, 0, 1));
+        Pair start = new Pair(new Point(n-1, 0, 0), new Point(n-1, 0, 1));
         queue.add(start);
         hashMap.put(start, 0);
+
+        finish = new Point(0, n-1, 0);
 
         int result = Integer.MAX_VALUE;
         while (!queue.isEmpty()) {
             Pair p = queue.poll();
 
+            if (p.p1.finish() && p.p2.finish()) {
+                result = hashMap.get(p);
+                break;
+            }
+
+            for (Pair pair: p.transition()) {
+                if (!hashMap.containsKey(pair)) {
+                    hashMap.put(pair, hashMap.get(p) + 1);
+                    queue.add(pair);
+                }
+            }
         }
 
         pw.println(result);
@@ -129,13 +146,22 @@ public class cownav {
             this.p2 = p2;
         }
 
+        Pair[] transition() {
+            return new Pair[] {
+                    new Pair(this.p1.right90(), this.p2.right90()),
+                    new Pair(this.p1.left90(), this.p2.left90()),
+                    new Pair(this.p1.forward(), this.p2.forward()),
+            };
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Pair pair = (Pair) o;
-            return Objects.equals(p1, pair.p1) &&
-                    Objects.equals(p2, pair.p2);
+            return (Objects.equals(p1, pair.p1) &&
+                    Objects.equals(p2, pair.p2)) || (Objects.equals(p2, pair.p1) &&
+                    Objects.equals(p1, pair.p2));
         }
 
         @Override
@@ -153,6 +179,40 @@ public class cownav {
             this.direction = direction;
         }
 
+        Point forward() {
+            Point p = new Point(this.x, this.y, this.direction);
+
+            if (p.finish()) return p;
+
+            if (p.direction == 0 && p.x != 0 && properSquare(p.x-1, p.y)) p.x--;
+            else if (p.direction == 1 && p.y != n-1 && properSquare(p.x, p.y + 1)) p.y++;
+            else if (p.direction == 2 && p.x != n-1 && properSquare(p.x + 1, p.y)) p.x++;
+            else if (p.direction == 3 && p.y != 0 && properSquare(p.x, p.y - 1)) p.y--;
+            return p;
+        }
+        Point left90() {
+            Point p = new Point(this.x, this.y, this.direction);
+            if (p.finish()) return p;
+            if (p.direction == 0) p.direction = 3;
+            else if (p.direction == 1) p.direction = 0;
+            else if (p.direction == 2) p.direction = 1;
+            else p.direction = 2;
+            return p;
+        }
+        Point right90() {
+            Point p = new Point(this.x, this.y, this.direction);
+            if (p.finish()) return p;
+            if (p.direction == 0) p.direction = 1;
+            else if (p.direction == 1) p.direction = 2;
+            else if (p.direction == 2) p.direction = 3;
+            else p.direction = 0;
+            return p;
+        }
+
+        boolean finish() {
+            return (this.x == finish.x && this.y == finish.y);
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -167,5 +227,9 @@ public class cownav {
         public int hashCode() {
             return Objects.hash(x, y, direction);
         }
+    }
+
+    static boolean properSquare(int x, int y) {
+        return grid[x][y] != 'H';
     }
 }

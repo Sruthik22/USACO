@@ -1,108 +1,173 @@
-// This template code suggested by KT BYTE Computer Science Academy
-//   for use in reading and writing files for USACO problems.
-
-// https://content.ktbyte.com/problem.java
-
 import java.util.*;
 import java.io.*;
 
 public class moocast {
 
-    static StreamTokenizer in;
+    static class InputReader {
+        public BufferedReader reader;
+        public StringTokenizer tokenizer;
 
-    static int nextInt() throws IOException {
-        in.nextToken();
-        return (int) in.nval;
+        public InputReader(InputStream stream) {
+            reader = new BufferedReader(new InputStreamReader(stream), 32768);
+            tokenizer = null;
+        }
+
+        public String next() {
+            while (tokenizer == null || !tokenizer.hasMoreTokens()) {
+                try {
+                    tokenizer = new StringTokenizer(reader.readLine());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return tokenizer.nextToken();
+        }
+
+        public int nextInt() {
+            return Integer.parseInt(next());
+        }
+
+        public float nextFloat() {
+            return Float.parseFloat(next());
+        }
+
+        public double nextDouble() {
+            return Float.parseFloat(next());
+        }
+
+        public long nextLong() {
+            return Long.parseLong(next());
+        }
     }
+
+    static class CPMath {
+        static int add(int a, int b) {
+            a += b;
+
+            if (a >= mod) a -= mod;
+
+            return a;
+        }
+
+        static int sub(int a, int b) {
+            a -= b;
+            if (a < 0) a += mod;
+            return a;
+        }
+
+        static int multiply(int a, long b) {
+            b = a * b;
+            return (int) (b % mod);
+        }
+
+        static int divide(int a, int b) {
+            return multiply(a, inverse(b));
+        }
+
+        static int inverse(int a) {
+            return power(a, mod - 2);
+        }
+
+        static int power(int a, int b) {
+            int r = 1;
+
+            while (b > 0) {
+                if (b % 2 == 1) {
+                    r = multiply(r, a);
+                }
+
+                a = multiply(a, a);
+                b /= 2;
+            }
+
+            return r;
+        }
+    }
+
+    static InputReader sc;
+    static PrintWriter pw;
+
+    static int n;
+    static Cow[] cows;
+    static int mod = (int) (1e9 + 7);
 
     public static void main(String[] args) throws Exception {
-        in = new StreamTokenizer(new BufferedReader(new FileReader("moocast.in")));
+        sc = new InputReader(new FileInputStream("moocast.in"));
+        pw = new PrintWriter(new File("moocast.out"));
 
-        int n = nextInt();
+        n = sc.nextInt();
 
-        LinkedList<Integer>[] linkedLists = new LinkedList[n];
+        cows = new Cow[n];
 
         for (int i = 0; i < n; i++) {
-            linkedLists[i] = new LinkedList<>();
+            cows[i] = new Cow(sc.nextInt(), sc.nextInt());
         }
 
-        Cow[] cows = new Cow[n];
+        int low = -1;
+        int high = mod;
 
-        for (int i = 0; i < n; i++) {
-            int x = nextInt();
-            int y = nextInt();
-            int p = nextInt();
-
-            cows[i] = new Cow(x, y, p);
+        while (high - low > 1) {
+            int mid = (low + high)/2;
+            if (check(mid)) high = mid;
+            else low = mid;
         }
 
+        pw.println(high);
+        pw.close();
+    }
+
+    static boolean check(int distance) {
+        DSU dsu = new DSU(n);
+
         for (int i = 0; i < n; i++) {
-
-            Cow ci = cows[i];
-
-            for (int j = i+1; j < n; j++) {
-                Cow cj = cows[j];
-
-                double dist = distance(ci, cj);
-
-                if (ci.transmition >= dist) {
-                    linkedLists[i].add(j);
-                }
-
-                if (cj.transmition >= dist) {
-                    linkedLists[j].add(i);
+            for (int j = i + 1; j < n; j++) {
+                if (distance(cows[i], cows[j], distance)) {
+                    dsu.merge(i, j);
                 }
             }
         }
 
-        int result = 0;
+        int parent = dsu.find(0);
 
         for (int i = 0; i < n; i++) {
-            // i is the starting cow
-            boolean[] visited = new boolean[n];
-
-            Stack<Integer> stack = new Stack<>();
-
-            stack.add(i);
-            visited[i] = true;
-
-            int result_i = 1;
-
-            while (!stack.isEmpty()) {
-                int cur = stack.pop();
-
-                for (int friend : linkedLists[cur]) {
-                    if (!visited[friend]) {
-                        result_i++;
-                        visited[friend] = true;
-                        stack.add(friend);
-                    }
-                }
-            }
-
-            result = Math.max(result, result_i);
+            if (dsu.find(i) != parent) return false;
         }
 
-        PrintWriter out = new PrintWriter(new File("moocast.out"));
-        System.out.println(result);
-        out.println(result);
-        out.close();
+        return true;
     }
 
-    private static double distance(Cow c1, Cow c2) {
-        return Math.sqrt(Math.pow((c1.x - c2.x), 2) + Math.pow((c1.y - c2.y), 2));
-    }
+    static class DSU {
+        static int[] parent;
+        DSU(int N) {
+            parent = new int[N];
 
-    private static class Cow {
+            for (int i = 0; i < N; i++) {
+                parent[i] = i;
+            }
+        }
+        int find(int a) {
+            if (parent[a] == a) return a;
+            return parent[a] = find(parent[a]);
+        }
+        void merge(int a, int b) {
+            int parent_a = find(a);
+            int parent_b = find(b);
+
+            if (parent_a != parent_b) {
+                parent[parent_a] = parent_b;
+            }
+        }
+    }
+    static class Cow {
         int x, y;
-        int transmition;
 
-        Cow(int x, int y, int transmition) {
+        Cow(int x, int y) {
             this.x = x;
             this.y = y;
-            this.transmition = transmition;
         }
-
+    }
+    static boolean distance(Cow a, Cow b, double distance) {
+        return distance >= (Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
     }
 }
 
