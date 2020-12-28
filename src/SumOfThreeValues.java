@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class SumOfThreeValues {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,71 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
-
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
+        int x = sc.nextInt();
+
+        Value[] values = new Value[n];
 
         for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
-
-            pw.print(distances.lastKey() + " ");
+            Value v = new Value(sc.nextInt(), i+1);
+            values[i] = v;
         }
 
+        Arrays.sort(values);
+
+        for (int i = 0; i < n; i++) {
+            // i is the third value
+
+            int left = i == 0 ? 1:0;
+            int right = i == n-1 ? n-2:n-1;
+
+            boolean works = false;
+
+            while (left < right) {
+                int sum = values[left].val + values[right].val + values[i].val;
+
+                if (sum < x) {
+                    left++;
+                    if (left == i) left++;
+                }
+
+                else if (sum == x) {
+                    works = true;
+                    break;
+                }
+
+                else {
+                    right--;
+                    if (right == i) right--;
+                }
+            }
+
+            if (works) {
+                pw.println(values[left].pos + " " + values[right].pos + " " + values[i].pos);
+                pw.close();
+                return;
+            }
+        }
+
+        pw.println("IMPOSSIBLE");
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static class Value implements Comparable<Value> {
+        int val, pos;
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+        Value(int val, int pos) {
+            this.val = val;
+            this.pos = pos;
         }
 
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
+        @Override
+        public int compareTo(Value o) {
+            return this.val - o.val;
         }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }

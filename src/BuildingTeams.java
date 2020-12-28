@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class BuildingTeams {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,72 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
+    static LinkedList<Integer>[] linkedLists;
+    static int[] assigned;
+    static boolean works;
 
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
+        int m = sc.nextInt();
+
+        linkedLists = new LinkedList[n];
 
         for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
+            linkedLists[i] = new LinkedList<>();
+        }
 
-            pw.print(distances.lastKey() + " ");
+        for (int i = 0; i < m; i++) {
+            int a = sc.nextInt() - 1;
+            int b = sc.nextInt() - 1;
+
+            linkedLists[a].add(b);
+            linkedLists[b].add(a);
+        }
+
+        assigned = new int[n];
+
+        works = true;
+
+        for (int i = 0; i < n; i++) {
+            if (assigned[i] != 0) continue;
+
+            assigned[i] = 1;
+            dfs(i);
+        }
+
+
+        if (works) {
+            for (int i = 0; i < n; i++) {
+                pw.print(assigned[i] + " ");
+            }
+        }
+
+        else {
+            pw.println("IMPOSSIBLE");
         }
 
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static void dfs(int node) {
+        if (!works) return;
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+        for (int i : linkedLists[node]) {
+            // these are all that are direct friends
+            if (assigned[i] == assigned[node]) {
+                works = false;
+                break;
+            }
+
+            int correct_num = assigned[node] == 1 ? 2:1;
+
+            if (assigned[i] == correct_num) continue;
+
+            assigned[i] = correct_num;
+            dfs(i);
         }
-
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
-        }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }

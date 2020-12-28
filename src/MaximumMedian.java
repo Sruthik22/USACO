@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class MaximumMedian {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,50 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
+    static int k;
+    static int[] uppers;
 
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
+        k = sc.nextInt();
+
+        int[] integers = new int[n];
 
         for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
-
-            pw.print(distances.lastKey() + " ");
+            integers[i] = sc.nextInt();
         }
 
+        Arrays.sort(integers);
+
+        uppers = Arrays.copyOfRange(integers, n / 2, n);
+
+        long low = uppers[0];
+        long high = uppers[0] + k + 1;
+
+        while (high - low > 1) {
+            long mid = (low + high)/2;
+            if (check(mid)) low = mid;
+            else high = mid;
+        }
+
+        pw.println(low);
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static boolean check(long median) {
+        int total = 0;
+        for (int i : uppers) {
+            if (i < median) {
+                total += median - i;
+                if (total > k) return false;
+            }
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+            else break;
         }
 
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
-        }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
+        return total <= k;
     }
 }

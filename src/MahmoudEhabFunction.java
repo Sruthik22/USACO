@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class MahmoudEhabFunction {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,97 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
-
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
+        int m = sc.nextInt();
+        int q = sc.nextInt();
+
+        long sum = 0;
 
         for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
+            int val = sc.nextInt();
+            if (i % 2 == 1) val = -val;
+            sum += val;
+        }
 
-            pw.print(distances.lastKey() + " ");
+        int[] b_elements = new int[m];
+
+        for (int i = 0; i < m; i++) {
+            b_elements[i] = sc.nextInt();
+        }
+
+        TreeSet<Long> treeSet = new TreeSet<>();
+
+        long b_sum = 0;
+
+        for (int j = 0; j < n; j++) {
+            int val = b_elements[j];
+            if (j % 2 == 0) val = -val;
+            b_sum += val;
+        }
+
+        treeSet.add(b_sum);
+
+        for (int i = 0; i < m - n; i++) {
+
+            b_sum = -b_sum;
+            b_sum -= b_elements[i];
+
+            int new_val = b_elements[n + i];
+
+            if ((n - 1) % 2 == 0) {
+                new_val = -new_val;
+            }
+
+            b_sum += new_val;
+            treeSet.add(b_sum);
+        }
+
+        long min = Long.MAX_VALUE;
+
+        if (treeSet.ceiling(-sum) != null) {
+            long closest_val_above = treeSet.ceiling(-sum);
+            min = Math.min(min, Math.abs(closest_val_above + sum));
+        }
+
+        if (treeSet.floor(-sum) != null) {
+            long closest_val_below = treeSet.floor(-sum);
+            min = Math.min(min, Math.abs(closest_val_below + sum));
+        }
+
+        pw.println(min);
+
+        for (int i = 0; i < q; i++) {
+            int l = sc.nextInt();
+            int r = sc.nextInt();
+            int x = sc.nextInt();
+
+            if (l % 2 == 1 && r % 2 == 1) {
+                sum += x;
+            }
+
+            else if (l % 2 == 0 && r % 2 == 0) {
+                sum -= x;
+            }
+
+            min = Long.MAX_VALUE;
+
+            if (treeSet.ceiling(-sum) != null) {
+                long closest_val_above = treeSet.ceiling(-sum);
+                min = Math.min(min, Math.abs(closest_val_above + sum));
+            }
+
+            if (treeSet.floor(-sum) != null) {
+                long closest_val_below = treeSet.floor(-sum);
+                min = Math.min(min, Math.abs(closest_val_below + sum));
+            }
+
+            pw.println(min);
         }
 
         pw.close();
-    }
-
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
-        }
-
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
-        }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }

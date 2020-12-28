@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class convention2 {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,67 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
-
     public static void main(String[] args) throws Exception {
-        sc = new InputReader(System.in);
-        pw = new PrintWriter(System.out);
-
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
+        sc = new InputReader(new FileInputStream("convention2.in"));
+        pw = new PrintWriter(new File("convention2.out"));
 
         int n = sc.nextInt();
 
-        for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
+        Cow[] cows = new Cow[n];
 
-            pw.print(distances.lastKey() + " ");
+        for (int i = 0; i < n; i++) {
+            Cow c = new Cow(i, sc.nextInt(), sc.nextInt());
+            cows[i] = c;
         }
 
+        Arrays.sort(cows, new Comparator<Cow>() {
+            @Override
+            public int compare(Cow o1, Cow o2) {
+                return o1.arrival - o2.arrival;
+            }
+        });
+
+        int result = 0;
+
+        PriorityQueue<Cow> priorityQueue = new PriorityQueue<>();
+        priorityQueue.add(cows[0]);
+        int current_time = cows[0].arrival;
+
+        int cow_pointer = 1;
+
+        for (int i = 0; i < n; i++) {
+            Cow cur = priorityQueue.poll();
+            result = Math.max(result, current_time - cur.arrival);
+            current_time += cur.sampling_time;
+
+            while (cow_pointer < n && cows[cow_pointer].arrival <= current_time) {
+                priorityQueue.add(cows[cow_pointer]);
+                cow_pointer++;
+            }
+
+            if (priorityQueue.isEmpty() && i != n-1) {
+                priorityQueue.add(cows[cow_pointer]);
+                current_time = cows[cow_pointer].arrival;
+                cow_pointer++;
+            }
+        }
+
+        pw.println(result);
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static class Cow implements Comparable<Cow> {
+        int priority, arrival, sampling_time;
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+        Cow(int priority, int arrival, int sampling_time) {
+            this.priority = priority;
+            this.arrival = arrival;
+            this.sampling_time = sampling_time;
         }
 
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
+        @Override
+        public int compareTo(Cow o) {
+            return this.priority - o.priority;
         }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }

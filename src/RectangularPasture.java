@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class RectangularPasture {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,81 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
-
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
 
-        for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
+        Cow[] cowsByX = new Cow[n];
+        Cow[] cowsByY = new Cow[n];
 
-            pw.print(distances.lastKey() + " ");
+        for (int i = 0; i < n; i++) {
+            int x = sc.nextInt();
+            int y = sc.nextInt();
+
+            Cow c = new Cow(x, y, i);
+            cowsByX[i] = c;
+            cowsByY[i] = c;
         }
 
+        Arrays.sort(cowsByX, Comparator.comparingInt(o -> o.x));
+        Arrays.sort(cowsByY, Comparator.comparingInt(o -> o.y));
+
+        int[][] prefix_sum = new int[n + 1][n + 1];
+
+        // i is the x coordinate by cowsByX
+        // j is the y coordinate by cowsByY
+
+        HashMap<Integer, Integer> xs_indices = new HashMap<>();
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n; j++) {
+                prefix_sum[i][j] = prefix_sum[i][j - 1] + prefix_sum[i - 1][j] - prefix_sum[i - 1][j - 1];
+                if (cowsByY[j-1].x == cowsByX[i-1].x) {
+                    prefix_sum[i][j]++;
+                }
+            }
+
+            xs_indices.put(cowsByX[i-1].x, i-1);
+        }
+
+        long result = 0;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = i; j < n; j++) {
+                int yb = cowsByY[j].y;
+                int xb = cowsByY[j].x;
+                int ya = cowsByY[i].y;
+                int xa = cowsByY[i].x;
+
+                // need to get the indices of these values
+
+                int x_min_i = xs_indices.get(Math.min(xa, xb));
+
+                long first_res = prefix_sum[x_min_i + 1][j + 1] - prefix_sum[0][j + 1]
+                        - prefix_sum[x_min_i + 1][i] + prefix_sum[0][i];
+
+                int x_max_i = xs_indices.get(Math.max(xa, xb));
+
+                long second_res = prefix_sum[n][j + 1] - prefix_sum[x_max_i][j + 1]
+                        - prefix_sum[n][i] + prefix_sum[x_max_i][i];
+
+                result += first_res * second_res;
+            }
+        }
+
+        pw.println(result+1);
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static class Cow {
+        int x, y, id;
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+        Cow(int x, int y, int id) {
+            this.x = x;
+            this.y = y;
+            this.id = id;
         }
-
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
-        }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }

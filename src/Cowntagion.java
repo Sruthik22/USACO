@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class Cowntagion {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,54 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
+    static LinkedList<Integer>[] linkedLists;
+
+    static int result;
 
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
-
+        linkedLists = new LinkedList[n];
         for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
-
-            pw.print(distances.lastKey() + " ");
+            linkedLists[i] = new LinkedList<>();
         }
 
+        for (int i = 0; i < n-1; i++) {
+            int a = sc.nextInt() - 1;
+            int b = sc.nextInt() - 1;
+
+            linkedLists[a].add(b);
+            linkedLists[b].add(a);
+        }
+
+        result = 0;
+
+        dfs(0, -1);
+
+        pw.println(result);
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static void dfs(int node, int parent) {
+        if (linkedLists[node].size() == 1) return;
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+        int num_children = linkedLists[node].size();
+        if (node != 0) num_children--;
+
+        // need to double until have at least num_children + 1 in the current node
+
+        int double_number = (int) Math.ceil(Math.log(num_children+1) / Math.log(2));
+
+        result += double_number;
+
+        for (int i : linkedLists[node]) {
+            if (i != parent) {
+                // this is a child of the current node
+                result++;
+                dfs(i, node);
+            }
         }
-
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
-        }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }

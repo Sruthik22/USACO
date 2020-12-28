@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-public class BitInversions {
+public class BuildingRoads {
 
     static class InputReader {
         public BufferedReader reader;
@@ -89,73 +89,57 @@ public class BitInversions {
 
     static int mod = (int) (1e9 + 7);
 
-    static String s;
-    static TreeSet<Integer> changes;
-    static TreeMap<Integer, Integer> distances;
+    static boolean[] visited;
+    static LinkedList<Integer>[] linkedLists;
 
     public static void main(String[] args) throws Exception {
         sc = new InputReader(System.in);
         pw = new PrintWriter(System.out);
 
-        s = sc.next();
-
-        changes = new TreeSet<>();
-        distances = new TreeMap<>();
-
-        changes.add(0);
-        changes.add(s.length());
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            if (s.charAt(i) != s.charAt(i + 1)) changes.add(i + 1);
-        }
-
-        for (int i : changes) {
-            if (changes.higher(i) != null) add(changes.higher(i) - i);
-        }
-
         int n = sc.nextInt();
+        int m = sc.nextInt();
+
+        linkedLists = new LinkedList[n];
 
         for (int i = 0; i < n; i++) {
-            int bit_change = sc.nextInt();
-            modify(bit_change - 1);
-            modify(bit_change);
+            linkedLists[i] = new LinkedList<>();
+        }
 
-            pw.print(distances.lastKey() + " ");
+        for (int i = 0; i < m; i++) {
+            int a = sc.nextInt() - 1;
+            int b = sc.nextInt() - 1;
+
+            linkedLists[a].add(b);
+            linkedLists[b].add(a);
+        }
+
+        int connected_components = 0;
+        visited = new boolean[n];
+
+        ArrayList<Integer> reps = new ArrayList<>();
+
+        for (int i = 0; i < n; i++) {
+            if (visited[i]) continue;
+            connected_components++;
+            dfs(i);
+            reps.add(i);
+        }
+
+        pw.println(connected_components - 1);
+
+        for (int i = 1; i < reps.size(); i++) {
+            pw.println((reps.get(i-1)+1) + " " + (reps.get(i)+1));
         }
 
         pw.close();
     }
 
-    static void modify(int value) {
-        if (value == s.length() || value == 0) return;
-        if (changes.contains(value)) {
-            changes.remove(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
+    static void dfs(int node) {
+        visited[node] = true;
 
-            remove(value - below);
-            remove(above - value);
-            add(above - below);
+        for (int i : linkedLists[node]) {
+            if (visited[i]) continue;
+            dfs(i);
         }
-
-        else {
-            changes.add(value);
-            int below = changes.lower(value);
-            int above = changes.higher(value);
-
-            remove(above - below);
-            add(value - below);
-            add(above - value);
-        }
-    }
-
-    static void remove(int value) {
-        distances.put(value, distances.get(value) - 1);
-        if (distances.get(value) == 0) distances.remove(value);
-    }
-
-    static void add(int value) {
-        distances.putIfAbsent(value, 0);
-        distances.put(value, distances.get(value) + 1);
     }
 }
